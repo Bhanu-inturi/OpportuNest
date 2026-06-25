@@ -25,9 +25,4 @@ Go to Settings in the sidebar → paste your key from https://console.groq.com
 
 The app runs in demo mode without a key.
 
-## Deploy to Netlify
-
-```bash
-npm run build
-# drag dist/ folder to netlify.com/drop
-```
+DEPLOYED - https://opportu-nest.vercel.app/
