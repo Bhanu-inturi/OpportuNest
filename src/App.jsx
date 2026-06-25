@@ -6,7 +6,7 @@ const useTheme = () => useContext(ThemeContext);
 
 // ─── API helper ───────────────────────────────────────────────────────────────
 async function callGroq(messages, systemPrompt = "", apiKey = "") {
-  const key = apiKey || localStorage.getItem("groq_key") || import.meta.env.VITE_GROQ_API_KEY || "";
+  const key = apiKey || localStorage.getItem("groq_key") || "";
   if (!key) throw new Error("No API key");
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -801,6 +801,75 @@ function ResumeAI({ apiKey, setToast }) {
   const [targetRole, setTargetRole] = useState("Software Engineering Internship");
   const [feedback, setFeedback]     = useState(null);
   const [loading, setLoading]       = useState(false);
+  const [fileName, setFileName]     = useState("");
+  const [dragOver, setDragOver]     = useState(false);
+  const [inputMode, setInputMode]   = useState("upload"); // "upload" | "paste"
+  const fileRef = useRef(null);
+
+  // Extract text from PDF using FileReader (reads as text for text-based PDFs)
+  const extractTextFromFile = (file) => {
+    return new Promise((resolve, reject) => {
+      if (file.type === "application/pdf") {
+        // For PDFs: read as ArrayBuffer and extract readable text chunks
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const bytes = new Uint8Array(e.target.result);
+          let text = "";
+          // Extract printable ASCII text from PDF binary
+          for (let i = 0; i < bytes.length; i++) {
+            const c = bytes[i];
+            if (c >= 32 && c < 127) text += String.fromCharCode(c);
+            else if (c === 10 || c === 13) text += " ";
+          }
+          // Clean up PDF artifacts — keep only readable chunks
+          const cleaned = text
+            .replace(/[^\x20-\x7E\n]/g, " ")
+            .replace(/\s{3,}/g, "\n")
+            .replace(/(BT|ET|Tf|Td|TD|Tm|Tr|Ts|Tw|Tz|T\*|cm|Do|re|W|n|q|Q|RG|rg|SCN|scn|CS|cs|sh|BI|EI|BMC|EMC|BDC|EDC)\b/g, " ")
+            .replace(/\/[A-Za-z0-9]+\s/g, " ")
+            .replace(/\d+(\.\d+)?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\s+\d+(\.\d+)?/g, " ")
+            .split("\n")
+            .map(l => l.trim())
+            .filter(l => l.length > 3)
+            .join("\n");
+          resolve(cleaned || "Could not extract text. Please paste your resume instead.");
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      } else {
+        // Plain text / docx-as-txt
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file);
+      }
+    });
+  };
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    const allowed = ["application/pdf", "text/plain", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    if (!allowed.includes(file.type) && !file.name.endsWith(".txt")) {
+      setToast("Please upload a PDF or TXT file");
+      return;
+    }
+    setFileName(file.name);
+    setToast("Reading file...");
+    try {
+      const text = await extractTextFromFile(file);
+      setResume(text);
+      setInputMode("paste");
+      setToast("File loaded! Review the text then analyze.");
+    } catch (e) {
+      setToast("Could not read file — please paste your resume instead");
+      setInputMode("paste");
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault(); setDragOver(false);
+    handleFile(e.dataTransfer.files[0]);
+  };
 
   const analyze = async () => {
     if (!resume.trim()) return;
@@ -822,21 +891,80 @@ function ResumeAI({ apiKey, setToast }) {
   return (
     <div>
       <div className="page-header">
-        <div><div className="page-title">Resume AI</div><div className="page-subtitle">Expert feedback and instant rewrites</div></div>
+        <div><div className="page-title">Resume AI</div><div className="page-subtitle">Upload your resume for expert AI feedback and instant rewrites</div></div>
       </div>
       <div className="page-content">
         <div className="grid-2" style={{ alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div className="card">
               <label className="input-label">Target role / opportunity</label>
-              <input className="input" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} style={{ marginBottom: 12 }} />
-              <label className="input-label">Paste your resume</label>
-              <textarea className="input" style={{ minHeight: 260 }} placeholder="Paste resume text here..." value={resume} onChange={(e) => setResume(e.target.value)} />
+              <input className="input" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} style={{ marginBottom: 14 }} />
+
+              {/* Tab switcher */}
+              <div className="tabs" style={{ marginBottom: 14 }}>
+                <button className={`tab${inputMode === "upload" ? " active" : ""}`} onClick={() => setInputMode("upload")}>📎 Upload file</button>
+                <button className={`tab${inputMode === "paste" ? " active" : ""}`} onClick={() => setInputMode("paste")}>📋 Paste text</button>
+              </div>
+
+              {inputMode === "upload" && (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={onDrop}
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border2)"}`,
+                    borderRadius: "var(--radius)",
+                    padding: "36px 20px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    background: dragOver ? "rgba(255,255,255,0.03)" : "var(--bg3)",
+                    transition: "var(--tr)",
+                  }}
+                >
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>📄</div>
+                  {fileName ? (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text1)", marginBottom: 4 }}>{fileName}</div>
+                      <div style={{ fontSize: 12, color: "var(--text2)" }}>File loaded — switch to Paste text to review</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text1)", marginBottom: 5 }}>Drop your resume here</div>
+                      <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 12 }}>PDF or TXT · click to browse</div>
+                      <button className="btn btn-outline btn-sm" onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}>Browse files</button>
+                    </>
+                  )}
+                  <input ref={fileRef} type="file" accept=".pdf,.txt,.doc,.docx" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
+                </div>
+              )}
+
+              {inputMode === "paste" && (
+                <textarea
+                  className="input"
+                  style={{ minHeight: 240 }}
+                  placeholder="Paste your resume text here, or upload a file using the Upload tab..."
+                  value={resume}
+                  onChange={(e) => setResume(e.target.value)}
+                />
+              )}
             </div>
-            <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: 12 }} onClick={analyze} disabled={!resume.trim() || loading}>
-              {loading ? "Analyzing..." : "Analyze resume →"}
-            </button>
+
+            {resume && (
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn btn-outline btn-sm" onClick={() => { setResume(""); setFileName(""); setFeedback(null); }}>Clear</button>
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: "center", padding: 12 }} onClick={analyze} disabled={!resume.trim() || loading}>
+                  {loading ? "Analyzing..." : "Analyze resume →"}
+                </button>
+              </div>
+            )}
+            {!resume && (
+              <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: 12 }} disabled>
+                Upload or paste resume first
+              </button>
+            )}
           </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {loading && [...Array(4)].map((_, i) => <div key={i} className="shimmer" style={{ height: 84 }} />)}
             {feedback && !loading && (
