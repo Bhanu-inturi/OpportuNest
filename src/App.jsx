@@ -632,27 +632,133 @@ Respond ONLY with valid JSON array. Each object: id(number), title, org, type(Sc
 
 // ─── Mock Interview ───────────────────────────────────────────────────────────
 function MockInterview({ apiKey, setToast }) {
-  const [role, setRole]         = useState("Software Engineering");
-  const [stage, setStage]       = useState("setup");
-  const [qIndex, setQIndex]     = useState(0);
-  const [answer, setAnswer]     = useState("");
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [timer, setTimer]       = useState(120);
-  const [timerOn, setTimerOn]   = useState(false);
-  const [scores, setScores]     = useState([]);
-  const ivRef = useRef(null);
+  const [role, setRole]           = useState("Software Engineering");
+  const [stage, setStage]         = useState("setup");
+  const [qIndex, setQIndex]       = useState(0);
+  const [answer, setAnswer]       = useState("");
+  const [feedback, setFeedback]   = useState(null);
+  const [loading, setLoading]     = useState(false);
+  const [timer, setTimer]         = useState(120);
+  const [timerOn, setTimerOn]     = useState(false);
+  const [scores, setScores]       = useState([]);
+  const [listening, setListening] = useState(false);
+  const [speaking, setSpeaking]   = useState(false);
+  const [voiceMode, setVoiceMode] = useState(true);
+  const [micVolume, setMicVolume] = useState(0);
+  const ivRef     = useRef(null);
+  const recogRef  = useRef(null);
+  const analyserRef = useRef(null);
+  const animRef   = useRef(null);
+  const streamRef = useRef(null);
 
   const questions = INTERVIEW_QS[role];
+  const hasVoice  = "speechSynthesis" in window;
+  const hasMic    = "webkitSpeechRecognition" in window || "SpeechRecognition" in window;
 
+  // ── Timer ──
   useEffect(() => {
     if (timerOn && timer > 0) ivRef.current = setTimeout(() => setTimer((t) => t - 1), 1000);
-    if (timer === 0) setTimerOn(false);
+    if (timer === 0) { setTimerOn(false); stopListening(); }
     return () => clearTimeout(ivRef.current);
   }, [timerOn, timer]);
 
+  // ── Cleanup on unmount ──
+  useEffect(() => () => {
+    stopListening();
+    window.speechSynthesis?.cancel();
+  }, []);
+
+  // ── Speak question aloud ──
+  const speakQuestion = (text) => {
+    if (!hasVoice) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.92;
+    utter.pitch = 1;
+    // prefer a natural voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google US English") || v.name.includes("Daniel") || v.name.includes("Karen"));
+    if (preferred) utter.voice = preferred;
+    utter.onstart = () => setSpeaking(true);
+    utter.onend   = () => { setSpeaking(false); if (voiceMode) startListening(); };
+    window.speechSynthesis.speak(utter);
+  };
+
+  // ── Mic volume visualiser ──
+  const startVolumeMonitor = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const ctx = new AudioContext();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      src.connect(analyser);
+      analyserRef.current = analyser;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        const vol = Math.min(100, Math.round(data.reduce((a, b) => a + b, 0) / data.length * 2.5));
+        setMicVolume(vol);
+        animRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch (e) { /* mic permission denied */ }
+  };
+
+  const stopVolumeMonitor = () => {
+    cancelAnimationFrame(animRef.current);
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    setMicVolume(0);
+  };
+
+  // ── Speech recognition ──
+  const startListening = () => {
+    if (!hasMic) { setToast("Speech recognition not supported — use Chrome"); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recog = new SR();
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = "en-US";
+    let finalText = "";
+    recog.onstart = () => { setListening(true); startVolumeMonitor(); };
+    recog.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript + " ";
+        else interim = e.results[i][0].transcript;
+      }
+      setAnswer(finalText + interim);
+    };
+    recog.onerror = (e) => { if (e.error !== "aborted") setToast("Mic error: " + e.error); };
+    recog.onend = () => { setListening(false); stopVolumeMonitor(); };
+    recogRef.current = recog;
+    recog.start();
+  };
+
+  const stopListening = () => {
+    recogRef.current?.stop();
+    recogRef.current = null;
+    stopVolumeMonitor();
+    setListening(false);
+  };
+
+  const toggleListening = () => {
+    if (listening) stopListening();
+    else startListening();
+  };
+
+  // ── Start interview — speak first question ──
+  const beginInterview = () => {
+    setStage("answering");
+    setTimeout(() => { if (voiceMode) speakQuestion(questions[0]); }, 300);
+  };
+
+  // ── Get AI feedback ──
   const getFeedback = async () => {
     if (!answer.trim()) return;
+    stopListening();
+    window.speechSynthesis?.cancel();
     setLoading(true); setStage("feedback");
     try {
       const raw = await callGroq(
@@ -661,6 +767,14 @@ function MockInterview({ apiKey, setToast }) {
       );
       const parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());
       setFeedback(parsed); setScores((s) => [...s, parsed.score]);
+      // read encouragement aloud
+      if (voiceMode && hasVoice) {
+        setTimeout(() => {
+          const utter = new SpeechSynthesisUtterance(parsed.encouragement);
+          utter.rate = 0.95;
+          window.speechSynthesis.speak(utter);
+        }, 600);
+      }
     } catch (e) {
       const f = { score: 78, strengths: ["Good structure", "Clear communication"], improvements: ["Add specific examples", "Quantify your impact"], model_answer: "A strong answer starts with a specific situation, describes your actions, and highlights measurable outcomes.", encouragement: "Great start — with practice you'll nail this!" };
       setFeedback(f); setScores((s) => [...s, f.score]);
@@ -670,12 +784,64 @@ function MockInterview({ apiKey, setToast }) {
   };
 
   const next = () => {
-    if (qIndex < questions.length - 1) { setQIndex((i) => i + 1); setAnswer(""); setFeedback(null); setTimer(120); setStage("answering"); }
-    else setStage("done");
+    window.speechSynthesis?.cancel();
+    if (qIndex < questions.length - 1) {
+      const nextQ = qIndex + 1;
+      setQIndex(nextQ); setAnswer(""); setFeedback(null); setTimer(120); setTimerOn(false); setStage("answering");
+      setTimeout(() => { if (voiceMode) speakQuestion(questions[nextQ]); }, 300);
+    } else { setStage("done"); }
   };
 
   const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   const scoreColor = (s) => s >= 80 ? "var(--text1)" : s >= 60 ? "var(--text2)" : "var(--red)";
+
+  // ── Mic button pulse rings ──
+  const MicButton = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* pulse rings when listening */}
+        {listening && [1, 2, 3].map(n => (
+          <div key={n} style={{
+            position: "absolute",
+            width: 72 + n * 20,
+            height: 72 + n * 20,
+            borderRadius: "50%",
+            border: `1.5px solid var(--accent)`,
+            opacity: Math.max(0, (micVolume / 100) * (1 - n * 0.25)),
+            animation: `pulse-ring ${0.8 + n * 0.2}s ease-out infinite`,
+            animationDelay: `${n * 0.15}s`,
+            pointerEvents: "none",
+          }} />
+        ))}
+        <button
+          onClick={toggleListening}
+          style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: listening ? "var(--accent)" : "var(--bg3)",
+            border: `2px solid ${listening ? "var(--accent)" : "var(--border)"}`,
+            color: listening ? "var(--bg1)" : "var(--text1)",
+            fontSize: 28, cursor: "pointer",
+            transition: "var(--tr)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: listening ? "0 0 24px rgba(255,255,255,0.15)" : "none",
+            position: "relative", zIndex: 1,
+          }}
+          title={listening ? "Stop recording" : "Start speaking"}
+        >
+          {listening ? "⏹" : "🎤"}
+        </button>
+      </div>
+      <div style={{ fontSize: 12, color: listening ? "var(--text1)" : "var(--text3)", fontWeight: listening ? 600 : 400, letterSpacing: "0.05em" }}>
+        {listening ? "Listening... speak now" : "Tap to speak"}
+      </div>
+      {/* volume bar */}
+      {listening && (
+        <div style={{ width: 120, height: 3, background: "var(--bg4)", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${micVolume}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.1s" }} />
+        </div>
+      )}
+    </div>
+  );
 
   if (stage === "done") return (
     <div>
@@ -690,7 +856,7 @@ function MockInterview({ apiKey, setToast }) {
         </div>
         <div style={{ display: "flex", gap: 11, justifyContent: "center" }}>
           <button className="btn btn-outline" onClick={() => { setStage("setup"); setQIndex(0); setScores([]); setAnswer(""); setFeedback(null); }}>Try another role</button>
-          <button className="btn btn-primary" onClick={() => { setStage("answering"); setQIndex(0); setScores([]); setAnswer(""); setFeedback(null); }}>Retry same role</button>
+          <button className="btn btn-primary" onClick={() => { setStage("answering"); setQIndex(0); setScores([]); setAnswer(""); setFeedback(null); beginInterview(); }}>Retry</button>
         </div>
       </div>
     </div>
@@ -698,10 +864,33 @@ function MockInterview({ apiKey, setToast }) {
 
   return (
     <div>
+      <style>{`
+        @keyframes pulse-ring {
+          0%   { transform: scale(0.95); opacity: 0.6; }
+          100% { transform: scale(1.15); opacity: 0; }
+        }
+        @keyframes speaking-wave {
+          0%,100% { transform: scaleY(0.4); }
+          50%      { transform: scaleY(1); }
+        }
+      `}</style>
+
       <div className="page-header">
         <div><div className="page-title">Mock Interview</div><div className="page-subtitle">AI-powered practice with real-time feedback</div></div>
-        {stage !== "setup" && <div style={{ fontSize: 13, color: "var(--text2)" }}>Q {qIndex + 1} / {questions.length}</div>}
+        {stage !== "setup" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Voice mode toggle */}
+            <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--text2)" }}>
+              <span>{voiceMode ? "🎙️ Voice" : "⌨️ Text"}</span>
+              <div className={`toggle-track${voiceMode ? " on" : ""}`} onClick={() => { setVoiceMode(v => !v); stopListening(); window.speechSynthesis?.cancel(); }} style={{ width: 34, height: 19 }}>
+                <div className="toggle-thumb" style={{ width: 13, height: 13, top: 2, left: 2 }} />
+              </div>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text2)" }}>Q {qIndex + 1} / {questions.length}</div>
+          </div>
+        )}
       </div>
+
       <div className="page-content">
         {stage === "setup" && (
           <div style={{ maxWidth: 560, margin: "0 auto" }}>
@@ -709,7 +898,7 @@ function MockInterview({ apiKey, setToast }) {
               <div className="section-title" style={{ marginBottom: 13 }}>Choose your track</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {Object.keys(INTERVIEW_QS).map((r) => (
-                  <button key={r} onClick={() => setRole(r)} style={{ padding: "12px 15px", borderRadius: "var(--radius-sm)", border: `1.5px solid ${role === r ? "var(--accent)" : "var(--border2)"}`, background: role === r ? "var(--bg3)" : "var(--bg3)", color: role === r ? "var(--text1)" : "var(--text2)", cursor: "pointer", textAlign: "left", fontSize: 13.5, fontWeight: role === r ? 600 : 400, transition: "var(--tr)" }}>
+                  <button key={r} onClick={() => setRole(r)} style={{ padding: "12px 15px", borderRadius: "var(--radius-sm)", border: `1.5px solid ${role === r ? "var(--accent)" : "var(--border2)"}`, background: "var(--bg3)", color: role === r ? "var(--text1)" : "var(--text2)", cursor: "pointer", textAlign: "left", fontSize: 13.5, fontWeight: role === r ? 600 : 400, transition: "var(--tr)" }}>
                     {r === "Software Engineering" ? "💻" : r === "Product Management" ? "📱" : "🚀"} {r}
                   </button>
                 ))}
@@ -717,25 +906,66 @@ function MockInterview({ apiKey, setToast }) {
             </div>
             <div className="card" style={{ marginBottom: 16 }}>
               <div className="section-title" style={{ marginBottom: 11 }}>How it works</div>
-              {["5 questions for your chosen track", "2-minute timer per answer", "AI scores each response with detailed feedback", "Final scorecard with improvement tips"].map((s, i) => (
+              {[
+                "AI reads each question aloud to you",
+                "Answer by speaking — your voice is transcribed live",
+                "Or switch to text mode anytime",
+                "AI scores your answer and gives detailed feedback",
+                "Final scorecard with improvement tips",
+              ].map((s, i) => (
                 <div key={i} style={{ display: "flex", gap: 11, marginBottom: 9 }}>
                   <div className="roadmap-num">{i + 1}</div>
                   <div style={{ fontSize: 12.5, color: "var(--text2)", paddingTop: 4 }}>{s}</div>
                 </div>
               ))}
             </div>
-            <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "12px" }} onClick={() => setStage("answering")}>Start interview →</button>
+            {/* Voice mode toggle on setup */}
+            <div className="card" style={{ marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text1)" }}>Voice mode</div>
+                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 3 }}>AI speaks questions · you answer aloud</div>
+              </div>
+              <div className={`toggle-track${voiceMode ? " on" : ""}`} onClick={() => setVoiceMode(v => !v)}>
+                <div className="toggle-thumb" />
+              </div>
+            </div>
+            {!hasMic && voiceMode && (
+              <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 12, padding: "10px 13px", background: "var(--bg3)", borderRadius: "var(--radius-sm)", borderLeft: "2px solid var(--red)" }}>
+                ⚠️ Speech recognition requires Chrome or Edge. Use text mode on other browsers.
+              </div>
+            )}
+            <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "12px" }} onClick={beginInterview}>
+              {voiceMode ? "🎙️ Start voice interview →" : "⌨️ Start interview →"}
+            </button>
           </div>
         )}
+
         {(stage === "answering" || stage === "feedback") && (
           <div style={{ maxWidth: 680, margin: "0 auto" }}>
+            {/* Progress bar */}
             <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
-              {questions.map((_, i) => <div key={i} style={{ height: 3, flex: 1, borderRadius: 2, background: i < qIndex ? "var(--accent)" : i === qIndex ? "var(--accent)" : "var(--bg4)", opacity: i < qIndex ? 1 : i === qIndex ? 1 : 0.25 }} />)}
+              {questions.map((_, i) => <div key={i} style={{ height: 3, flex: 1, borderRadius: 2, background: i <= qIndex ? "var(--accent)" : "var(--bg4)", opacity: i < qIndex ? 1 : i === qIndex ? 1 : 0.25 }} />)}
             </div>
-            <div className="card card-glow" style={{ marginBottom: 13 }}>
+
+            {/* Question card */}
+            <div className="card card-glow" style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 13 }}>
-                <span className="tag tag-a">{role}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="tag tag-a">{role}</span>
+                  {speaking && (
+                    <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} style={{ width: 3, height: 14, background: "var(--accent)", borderRadius: 2, animation: `speaking-wave 0.6s ease infinite`, animationDelay: `${i * 0.1}s` }} />
+                      ))}
+                      <span style={{ fontSize: 11, color: "var(--text3)", marginLeft: 4 }}>speaking...</span>
+                    </div>
+                  )}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  {/* Replay question */}
+                  {hasVoice && (
+                    <button className="btn btn-ghost btn-sm" onClick={() => speakQuestion(questions[qIndex])} title="Replay question" style={{ fontSize: 16, padding: "4px 8px" }}>🔊</button>
+                  )}
                   <div className="int-timer" style={{ color: timer < 30 ? "var(--red)" : "var(--text1)" }}>
                     {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
                   </div>
@@ -744,18 +974,50 @@ function MockInterview({ apiKey, setToast }) {
                     : <button className="btn btn-outline btn-sm" onClick={() => setTimerOn(false)}>⏸ Pause</button>}
                 </div>
               </div>
-              <div style={{ fontSize: 17, fontWeight: 600, fontFamily: "var(--font-display)", lineHeight: 1.5, color: "var(--text1)" }}>{questions[qIndex]}</div>
+              <div style={{ fontSize: 17, fontWeight: 600, fontFamily: "var(--font-display)", lineHeight: 1.5, color: "var(--text1)" }}>
+                {questions[qIndex]}
+              </div>
             </div>
+
             {stage === "answering" && (
               <>
-                <textarea className="input" style={{ minHeight: 128, marginBottom: 10 }} placeholder="Type your answer here..." value={answer} onChange={(e) => setAnswer(e.target.value)} />
-                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button className="btn btn-outline" onClick={() => { setAnswer(""); setTimer(120); setTimerOn(false); }}>Clear</button>
-                  <button className="btn btn-primary" onClick={getFeedback} disabled={!answer.trim() || loading}>{loading ? "Analyzing..." : "Get feedback →"}</button>
+                {/* Voice mode UI */}
+                {voiceMode ? (
+                  <div className="card" style={{ marginBottom: 13, textAlign: "center", padding: "28px 20px" }}>
+                    <MicButton />
+                    {answer && (
+                      <div style={{ marginTop: 20, textAlign: "left" }}>
+                        <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>Your answer (live transcript)</div>
+                        <div style={{ fontSize: 13, color: "var(--text1)", lineHeight: 1.65, background: "var(--bg3)", padding: "12px 14px", borderRadius: "var(--radius-sm)", borderLeft: "2px solid var(--accent)", minHeight: 60 }}>
+                          {answer}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <textarea className="input" style={{ minHeight: 128, marginBottom: 13 }} placeholder="Type your answer here..." value={answer} onChange={(e) => setAnswer(e.target.value)} />
+                )}
+
+                <div style={{ display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-outline btn-sm" onClick={() => { setAnswer(""); }}>Clear</button>
+                    {voiceMode && (
+                      <button className="btn btn-outline btn-sm" onClick={() => setVoiceMode(false)}>⌨️ Switch to text</button>
+                    )}
+                  </div>
+                  <button className="btn btn-primary" onClick={getFeedback} disabled={!answer.trim() || loading}>
+                    {loading ? "Analyzing..." : "Get feedback →"}
+                  </button>
                 </div>
               </>
             )}
-            {stage === "feedback" && loading && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{[...Array(3)].map((_, i) => <div key={i} className="shimmer" style={{ height: 76 }} />)}</div>}
+
+            {stage === "feedback" && loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[...Array(3)].map((_, i) => <div key={i} className="shimmer" style={{ height: 76 }} />)}
+              </div>
+            )}
+
             {stage === "feedback" && !loading && feedback && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div className="card" style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -768,6 +1030,13 @@ function MockInterview({ apiKey, setToast }) {
                     <div className="progress-bar" style={{ height: 6 }}><div className="progress-fill" style={{ width: `${feedback.score}%`, opacity: feedback.score >= 80 ? 1 : 0.6 }} /></div>
                   </div>
                 </div>
+
+                {/* Your spoken answer */}
+                <div className="card">
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text1)", marginBottom: 7 }}>📝 Your answer</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.65, fontStyle: "italic" }}>"{answer.trim()}"</div>
+                </div>
+
                 <div className="grid-2">
                   <div className="card">
                     <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text1)", marginBottom: 8 }}>✓ Strengths</div>
@@ -783,8 +1052,8 @@ function MockInterview({ apiKey, setToast }) {
                   <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.65 }}>{feedback.model_answer}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                  <button className="btn btn-outline" onClick={() => { setStage("answering"); setFeedback(null); }}>Retry</button>
-                  <button className="btn btn-primary" onClick={next}>{qIndex < questions.length - 1 ? "Next →" : "See results"}</button>
+                  <button className="btn btn-outline" onClick={() => { setStage("answering"); setFeedback(null); setAnswer(""); }}>Retry</button>
+                  <button className="btn btn-primary" onClick={next}>{qIndex < questions.length - 1 ? "Next question →" : "See results"}</button>
                 </div>
               </div>
             )}
