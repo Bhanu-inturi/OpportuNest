@@ -358,7 +358,7 @@ function ThemeToggle() {
   );
 }
 
-function Sidebar({ view, setView, profile }) {
+function Sidebar({ view, setView, profile, onLogout, user }) {
   const nav = [
     { id: "dashboard", icon: "🏠", label: "Dashboard" },
     { id: "discover",  icon: "🔍", label: "Discover", badge: "5" },
@@ -386,8 +386,13 @@ function Sidebar({ view, setView, profile }) {
       </div>
       <ThemeToggle />
       <div className="sidebar-footer">
-        <div className="xp-label"><span>{profile.name || "Student"}</span><span>Lvl 4</span></div>
+        <div className="xp-label"><span>{profile.name || user?.name || "Student"}</span><span>Lvl 4</span></div>
         <div className="xp-bar"><div className="xp-fill" style={{ width: "62%" }} /></div>
+        {onLogout && (
+          <button className="nav-item" style={{ marginTop: 10, color: "var(--text3)", fontSize: 12 }} onClick={onLogout}>
+            <span className="nav-icon">🚪</span><span>Log out</span>
+          </button>
+        )}
       </div>
     </aside>
   );
@@ -1410,11 +1415,453 @@ function Settings({ profile, setProfile, apiKey, setApiKey, setToast }) {
   );
 }
 
+// ─── Landing Page ─────────────────────────────────────────────────────────────
+function Landing({ onAuth, theme, toggle }) {
+  const dark = theme === "dark";
+  const stats = [
+    { val: "2,847+", label: "Opportunities matched" },
+    { val: "$12.4M", label: "In aid surfaced" },
+    { val: "1,200+", label: "Interviews practiced" },
+    { val: "94%",    label: "Student satisfaction" },
+  ];
+  const features = [
+    { icon: "🔍", title: "AI Opportunity Finder", desc: "Personalized scholarships, grants & competitions matched to your exact profile with a 'why you fit' explanation." },
+    { icon: "🎤", title: "Voice Mock Interviews", desc: "Speak your answers out loud. AI scores you, reads feedback, and gives a model answer — just like a real interview." },
+    { icon: "📄", title: "Resume AI", desc: "Upload your PDF. Get section-by-section scores, a rewritten summary, and the exact keywords you're missing." },
+    { icon: "🗺️", title: "Personal Roadmap", desc: "A step-by-step action plan showing exactly what to do next, with deadlines and priority flags." },
+    { icon: "💬", title: "AI Career Advisor", desc: "Chat with an AI coach that knows your profile and can answer anything about college, careers, and applications." },
+    { icon: "✍️", title: "Essay Draft Generator", desc: "Pick an opportunity, click draft — get a personalized first draft of your application essay in seconds." },
+  ];
+  const testimonials = [
+    { name: "Priya S.", grade: "12th grade · New Jersey", text: "Found the Questbridge scholarship through OpportuNest. Applied. Got a full ride to Carnegie Mellon.", emoji: "🎓" },
+    { name: "Marcus T.", grade: "11th grade · California", text: "The mock interview feature helped me land a Google STEP internship. I practiced for 3 days straight.", emoji: "💼" },
+    { name: "Aisha K.", grade: "12th grade · Texas", text: "I had no idea I qualified for $40K in scholarships. OpportuNest found 6 of them in under a minute.", emoji: "🏆" },
+  ];
+
+  const landingCSS = `
+    .landing { min-height: 100vh; background: var(--bg1); color: var(--text1); font-family: var(--font-body); }
+    .landing-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 60px; border-bottom: 1px solid var(--border2); position: sticky; top: 0; background: var(--bg1); z-index: 100; backdrop-filter: blur(12px); }
+    .landing-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--text1); }
+    .landing-logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; filter: ${dark ? "none" : "invert(1)"}; }
+    .nav-links { display: flex; align-items: center; gap: 10px; }
+    .hero { padding: 100px 60px 80px; text-align: center; max-width: 860px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text2); margin-bottom: 28px; }
+    .hero-title { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); font-weight: 700; line-height: 1.15; color: var(--text1); margin-bottom: 22px; }
+    .hero-title span { color: ${dark ? "#aaaaaa" : "#444444"}; }
+    .hero-sub { font-size: 18px; color: var(--text2); line-height: 1.7; max-width: 580px; margin: 0 auto 36px; }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+    .role-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; }
+    .role-card { background: var(--bg2); border: 1.5px solid var(--border2); border-radius: 16px; padding: 32px 28px; width: 280px; text-align: center; cursor: pointer; transition: var(--tr); }
+    .role-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: var(--glow); }
+    .role-card-icon { font-size: 40px; margin-bottom: 14px; }
+    .role-card-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text1); margin-bottom: 8px; }
+    .role-card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+    .stats-row { display: flex; gap: 0; justify-content: center; border: 1px solid var(--border2); border-radius: 16px; overflow: hidden; max-width: 700px; margin: 0 auto 80px; }
+    .stat-item { flex: 1; padding: 28px 20px; text-align: center; border-right: 1px solid var(--border2); }
+    .stat-item:last-child { border-right: none; }
+    .stat-item-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text1); }
+    .stat-item-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .section { padding: 60px; max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
+    .section-h { font-family: var(--font-display); font-size: clamp(26px, 4vw, 40px); font-weight: 700; color: var(--text1); margin-bottom: 14px; }
+    .section-sub { font-size: 15px; color: var(--text2); max-width: 480px; line-height: 1.7; margin-bottom: 44px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feature-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 24px; transition: var(--tr); }
+    .feature-card:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: var(--glow); }
+    .feature-icon { font-size: 28px; margin-bottom: 12px; }
+    .feature-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text1); margin-bottom: 8px; }
+    .feature-desc { font-size: 13px; color: var(--text2); line-height: 1.65; }
+    .testimonials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .testimonial-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 22px; }
+    .testimonial-text { font-size: 14px; color: var(--text1); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+    .testimonial-name { font-size: 13px; font-weight: 600; color: var(--text1); }
+    .testimonial-grade { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .landing-footer { border-top: 1px solid var(--border2); padding: 32px 60px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-text { font-size: 13px; color: var(--text3); }
+    .cta-section { background: var(--bg2); border-top: 1px solid var(--border2); border-bottom: 1px solid var(--border2); padding: 80px 60px; text-align: center; }
+    @media (max-width: 768px) {
+      .landing-nav { padding: 14px 20px; }
+      .hero { padding: 60px 20px 40px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .testimonials { grid-template-columns: 1fr; }
+      .stats-row { flex-wrap: wrap; }
+      .section { padding: 40px 20px; }
+      .role-cards { flex-direction: column; align-items: center; }
+      .landing-footer { flex-direction: column; gap: 10px; text-align: center; }
+      .cta-section { padding: 50px 20px; }
+    }
+  `;
+
+  return (
+    <>
+      <style>{landingCSS}</style>
+      <div className="landing">
+
+        {/* Nav */}
+        <nav className="landing-nav">
+          <div className="landing-logo">
+            <div className="landing-logo-icon">🪺</div>
+            OpportuNest
+          </div>
+          <div className="nav-links">
+            <ThemeToggle />
+            <button className="btn btn-outline btn-sm" onClick={() => onAuth("login", "student")}>Log in</button>
+            <button className="btn btn-primary btn-sm" onClick={() => onAuth("signup", "student")}>Sign up free</button>
+          </div>
+        </nav>
+
+        {/* Hero */}
+        <div className="hero">
+          <div className="hero-badge">🚀 Built for the next generation of achievers</div>
+          <h1 className="hero-title">
+            Find Opportunities<br /><span>That Actually Match You</span>
+          </h1>
+          <p className="hero-sub">
+            AI-powered scholarship discovery, mock interviews, and resume coaching — so every student gets the guidance that used to cost thousands of dollars or require the right connections.
+          </p>
+          <div className="hero-cta">
+            <button className="btn btn-primary" style={{ padding: "13px 28px", fontSize: 15 }} onClick={() => onAuth("signup", "student")}>
+              Get started free →
+            </button>
+            <button className="btn btn-outline" style={{ padding: "13px 28px", fontSize: 15 }} onClick={() => onAuth("login", "student")}>
+              See how it works
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="stats-row">
+            {stats.map((s, i) => (
+              <div key={i} className="stat-item">
+                <div className="stat-item-val">{s.val}</div>
+                <div className="stat-item-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Role selector */}
+        <div style={{ textAlign: "center", padding: "0 20px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text3)", marginBottom: 10 }}>Who are you?</div>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(24px,4vw,36px)", fontWeight: 700, color: "var(--text1)", marginBottom: 14 }}>Choose your path</h2>
+          <p style={{ fontSize: 14, color: "var(--text2)", marginBottom: 36 }}>Different experience, same mission — connecting talent with opportunity.</p>
+        </div>
+        <div className="role-cards">
+          <div className="role-card" onClick={() => onAuth("signup", "student")}>
+            <div className="role-card-icon">🎓</div>
+            <div className="role-card-title">I'm a Student</div>
+            <div className="role-card-desc">Find scholarships, practice interviews, fix your resume, and get a personalized roadmap to your goals.</div>
+            <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>Sign up as Student →</button>
+          </div>
+          <div className="role-card" onClick={() => onAuth("signup", "recruiter")}>
+            <div className="role-card-icon">🏢</div>
+            <div className="role-card-title">I'm a Recruiter</div>
+            <div className="role-card-desc">Post internships and programs, discover pre-screened student talent, and reach the next generation of builders.</div>
+            <button className="btn btn-outline" style={{ width: "100%", justifyContent: "center" }}>Sign up as Recruiter →</button>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="section">
+          <div style={{ textAlign: "center", marginBottom: 44 }}>
+            <div className="section-label">Features</div>
+            <h2 className="section-h">Everything you need to launch your future</h2>
+            <p className="section-sub" style={{ margin: "0 auto" }}>Six AI-powered tools built specifically for high school and college students.</p>
+          </div>
+          <div className="features-grid">
+            {features.map((f, i) => (
+              <div key={i} className="feature-card">
+                <div className="feature-icon">{f.icon}</div>
+                <div className="feature-title">{f.title}</div>
+                <div className="feature-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="section" style={{ paddingTop: 0 }}>
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
+            <div className="section-label">Stories</div>
+            <h2 className="section-h">Students who found their future</h2>
+          </div>
+          <div className="testimonials">
+            {testimonials.map((t, i) => (
+              <div key={i} className="testimonial-card">
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{t.emoji}</div>
+                <div className="testimonial-text">"{t.text}"</div>
+                <div className="testimonial-name">{t.name}</div>
+                <div className="testimonial-grade">{t.grade}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="cta-section">
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px,4vw,40px)", fontWeight: 700, color: "var(--text1)", marginBottom: 14 }}>
+            Stop missing opportunities you're already qualified for.
+          </h2>
+          <p style={{ fontSize: 15, color: "var(--text2)", marginBottom: 32, maxWidth: 480, margin: "0 auto 32px" }}>
+            Join thousands of students using OpportuNest to find scholarships, prep for interviews, and launch their careers.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <button className="btn btn-primary" style={{ padding: "13px 28px", fontSize: 15 }} onClick={() => onAuth("signup", "student")}>
+              Start for free →
+            </button>
+            <button className="btn btn-outline" style={{ padding: "13px 28px", fontSize: 15 }} onClick={() => onAuth("signup", "recruiter")}>
+              Post an opportunity
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="landing-footer">
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <div className="landing-logo-icon" style={{ width: 26, height: 26, fontSize: 13, borderRadius: 7 }}>🪺</div>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--text1)" }}>OpportuNest</span>
+          </div>
+          <div className="footer-text">© 2025 OpportuNest · Built for YCFxAI Hackathon</div>
+          <div style={{ display: "flex", gap: 16 }}>
+            {["About", "Privacy", "Contact"].map(l => <span key={l} style={{ fontSize: 13, color: "var(--text3)", cursor: "pointer" }}>{l}</span>)}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Auth Modal ───────────────────────────────────────────────────────────────
+function AuthModal({ mode, role, onClose, onSuccess, theme }) {
+  const [form, setForm] = useState({ name: "", email: "", password: "", org: "", grade: "" });
+  const [step, setStep] = useState(mode); // "login" | "signup"
+  const isRecruiter = role === "recruiter";
+
+  const handle = () => {
+    if (!form.email || !form.password) return;
+    onSuccess({ name: form.name || (isRecruiter ? "Recruiter" : "Student"), email: form.email, role });
+  };
+
+  const modalCSS = `
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 36px; width: 100%; max-width: 420px; animation: slideIn 0.25s ease; box-shadow: var(--shadow); }
+    .modal-logo { display: flex; align-items: center; gap: 9px; margin-bottom: 24px; }
+    .modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text1); margin-bottom: 6px; }
+    .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+    .role-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+    .modal-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+    .modal-divider-line { flex: 1; height: 1px; background: var(--border2); }
+    .modal-divider-text { font-size: 11px; color: var(--text3); }
+    .switch-mode { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text2); }
+    .switch-mode span { color: var(--text1); font-weight: 600; cursor: pointer; text-decoration: underline; }
+  `;
+
+  return (
+    <>
+      <style>{modalCSS}</style>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-logo">
+            <div style={{ width: 28, height: 28, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, filter: theme === "dark" ? "none" : "invert(1)" }}>🪺</div>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--text1)" }}>OpportuNest</span>
+          </div>
+
+          <div className="modal-title">{step === "login" ? "Welcome back" : "Create your account"}</div>
+          <div className="modal-sub">{step === "login" ? "Sign in to your OpportuNest account" : "Start finding opportunities in minutes"}</div>
+
+          <div className="role-pill">
+            {isRecruiter ? "🏢 Recruiter account" : "🎓 Student account"}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+            {step === "signup" && (
+              <div>
+                <label className="input-label">{isRecruiter ? "Your name" : "Full name"}</label>
+                <input className="input" placeholder={isRecruiter ? "Jane Smith" : "Alex Chen"} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+            )}
+            {step === "signup" && isRecruiter && (
+              <div>
+                <label className="input-label">Organization / Company</label>
+                <input className="input" placeholder="Google, MIT, Questbridge..." value={form.org} onChange={e => setForm(f => ({ ...f, org: e.target.value }))} />
+              </div>
+            )}
+            {step === "signup" && !isRecruiter && (
+              <div>
+                <label className="input-label">Grade / Year</label>
+                <input className="input" placeholder="11th Grade" value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))} />
+              </div>
+            )}
+            <div>
+              <label className="input-label">Email address</label>
+              <input className="input" type="email" placeholder="you@email.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div>
+              <label className="input-label">Password</label>
+              <input className="input" type="password" placeholder="••••••••" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+            </div>
+          </div>
+
+          <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "12px", marginTop: 18, fontSize: 14 }} onClick={handle}>
+            {step === "login" ? "Sign in →" : `Create ${isRecruiter ? "recruiter" : "student"} account →`}
+          </button>
+
+          <div className="switch-mode">
+            {step === "login" ? <>Don't have an account? <span onClick={() => setStep("signup")}>Sign up</span></> : <>Already have an account? <span onClick={() => setStep("login")}>Log in</span></>}
+          </div>
+
+          <button onClick={onClose} style={{ position: "absolute", display: "none" }} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Recruiter Dashboard ──────────────────────────────────────────────────────
+function RecruiterDashboard({ user, onLogout, theme, toggle }) {
+  const [view, setView] = useState("home");
+  const [postForm, setPostForm] = useState({ title: "", org: user.name, type: "Internship", deadline: "", amount: "", description: "", skills: "" });
+  const [posted, setPosted] = useState([
+    { id: 1, title: "Summer Engineering Internship", type: "Internship", applicants: 24, deadline: "Aug 2025", status: "Active" },
+    { id: 2, title: "STEM Research Grant", type: "Grant", applicants: 11, deadline: "Oct 2025", status: "Active" },
+  ]);
+  const [toast, setToast] = useState(null);
+
+  const submit = () => {
+    if (!postForm.title) return;
+    setPosted(p => [...p, { id: Date.now(), title: postForm.title, type: postForm.type, applicants: 0, deadline: postForm.deadline, status: "Active" }]);
+    setPostForm({ title: "", org: user.name, type: "Internship", deadline: "", amount: "", description: "", skills: "" });
+    setToast("Opportunity posted!");
+    setView("home");
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggle }}>
+      <GlobalStyles theme={theme} />
+      {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
+      <div style={{ minHeight: "100vh", background: "var(--bg1)" }}>
+        {/* Recruiter nav */}
+        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border2)", background: "var(--bg2)", position: "sticky", top: 0, zIndex: 100 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 30, height: 30, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, filter: theme === "dark" ? "none" : "invert(1)" }}>🪺</div>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, color: "var(--text1)" }}>OpportuNest <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "var(--font-body)", fontWeight: 400 }}>Recruiter</span></span>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <ThemeToggle />
+            <span style={{ fontSize: 13, color: "var(--text2)" }}>🏢 {user.name}</span>
+            <button className="btn btn-outline btn-sm" onClick={onLogout}>Log out</button>
+          </div>
+        </nav>
+
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 24px" }}>
+          {/* Tabs */}
+          <div className="tabs" style={{ marginBottom: 24 }}>
+            <button className={`tab${view === "home" ? " active" : ""}`} onClick={() => setView("home")}>📊 Dashboard</button>
+            <button className={`tab${view === "post" ? " active" : ""}`} onClick={() => setView("post")}>➕ Post Opportunity</button>
+            <button className={`tab${view === "talent" ? " active" : ""}`} onClick={() => setView("talent")}>🔍 Browse Talent</button>
+          </div>
+
+          {view === "home" && (
+            <>
+              <div className="grid-3" style={{ marginBottom: 24 }}>
+                {[{ val: posted.length, label: "Active postings" }, { val: posted.reduce((a, b) => a + b.applicants, 0), label: "Total applicants" }, { val: "94%", label: "Match quality score" }].map((s, i) => (
+                  <div key={i} className="stat-card"><div className="stat-val">{s.val}</div><div className="stat-label">{s.label}</div></div>
+                ))}
+              </div>
+              <div className="card">
+                <div className="section-head">
+                  <div className="section-title">Your postings</div>
+                  <button className="btn btn-primary btn-sm" onClick={() => setView("post")}>+ Post new</button>
+                </div>
+                {posted.map(p => (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: "1px solid var(--border2)" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text1)" }}>{p.title}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text2)", marginTop: 3 }}>{p.type} · Deadline {p.deadline}</div>
+                    </div>
+                    <span className="tag tag-a">{p.applicants} applicants</span>
+                    <span className="tag tag-good">{p.status}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {view === "post" && (
+            <div className="card" style={{ maxWidth: 600 }}>
+              <div className="section-title" style={{ marginBottom: 18 }}>Post an opportunity</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+                {[["title","Opportunity title","Summer Engineering Internship"],["org","Organization","Google"],["amount","Award / Stipend","$5,000"],["deadline","Deadline","Aug 2025"],["skills","Required skills (comma separated)","Python, React, ML"]].map(([k, label, ph]) => (
+                  <div key={k}>
+                    <label className="input-label">{label}</label>
+                    <input className="input" placeholder={ph} value={postForm[k]} onChange={e => setPostForm(f => ({ ...f, [k]: e.target.value }))} />
+                  </div>
+                ))}
+                <div>
+                  <label className="input-label">Type</label>
+                  <select className="input" value={postForm.type} onChange={e => setPostForm(f => ({ ...f, type: e.target.value }))}>
+                    {["Internship","Scholarship","Grant","Competition","Research"].map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="input-label">Description</label>
+                  <textarea className="input" style={{ minHeight: 100 }} placeholder="Describe the opportunity, eligibility, what students will gain..." value={postForm.description} onChange={e => setPostForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-outline" onClick={() => setView("home")}>Cancel</button>
+                  <button className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={submit} disabled={!postForm.title}>Post opportunity →</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {view === "talent" && (
+            <div>
+              <div style={{ marginBottom: 20 }}>
+                <div className="page-title" style={{ marginBottom: 6 }}>Browse Student Talent</div>
+                <div style={{ fontSize: 13, color: "var(--text2)" }}>Pre-screened profiles of students actively seeking opportunities.</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+                {[
+                  { name: "Alex Chen", grade: "11th Grade", location: "New Jersey", skills: "React, Python, ML", gpa: "3.9", goal: "Software Engineering Internship" },
+                  { name: "Priya Sharma", grade: "12th Grade", location: "California", skills: "Biology, Data Analysis, R", gpa: "4.0", goal: "STEM Research Program" },
+                  { name: "Marcus Thompson", grade: "11th Grade", location: "Texas", skills: "UI/UX, Figma, JavaScript", gpa: "3.7", goal: "Product Design Internship" },
+                  { name: "Aisha Kamara", grade: "10th Grade", location: "New York", skills: "Writing, Public Speaking, Policy", gpa: "3.8", goal: "Political Science Scholarship" },
+                ].map((s, i) => (
+                  <div key={i} className="card card-hover">
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14 }}>
+                      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text1)" }}>{s.name}</div>
+                          <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 2 }}>{s.grade} · {s.location} · GPA {s.gpa}</div>
+                          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Looking for: {s.goal}</div>
+                        </div>
+                      </div>
+                      <button className="btn btn-outline btn-sm">View profile</button>
+                    </div>
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 12 }}>
+                      {s.skills.split(", ").map(sk => <span key={sk} className="tag tag-b">{sk}</span>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </ThemeContext.Provider>
+  );
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [theme, setTheme]   = useState(() => localStorage.getItem("on_theme") || "dark");
+  const [screen, setScreen] = useState("landing"); // landing | app | recruiter
+  const [auth, setAuth]     = useState(null); // { mode, role }
+  const [user, setUser]     = useState(null);
   const [view, setView]     = useState("dashboard");
-  const [profile, setProfile] = useState({ name: "Alex", grade: "11th Grade", gpa: "3.9", skills: "React, Python, ML", interests: "AI, education tech", goals: "Software engineer", location: "New Jersey" });
+  const [profile, setProfile] = useState({ name: "", grade: "", gpa: "", skills: "", interests: "", goals: "", location: "" });
   const [opportunities, setOpportunities] = useState(DEMO_OPPS);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("groq_key") || "");
   const [toast, setToast]   = useState(null);
@@ -1423,6 +1870,25 @@ export default function App() {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
     localStorage.setItem("on_theme", next);
+  };
+
+  const handleAuth = (mode, role) => setAuth({ mode, role });
+
+  const handleSuccess = (userData) => {
+    setUser(userData);
+    setAuth(null);
+    if (userData.role === "recruiter") {
+      setScreen("recruiter");
+    } else {
+      setProfile(p => ({ ...p, name: userData.name, email: userData.email }));
+      setScreen("app");
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setScreen("landing");
+    setView("dashboard");
   };
 
   const views = {
@@ -1435,14 +1901,28 @@ export default function App() {
     settings:  <Settings profile={profile} setProfile={setProfile} apiKey={apiKey} setApiKey={setApiKey} setToast={setToast} />,
   };
 
+  if (screen === "recruiter" && user) {
+    return <RecruiterDashboard user={user} onLogout={handleLogout} theme={theme} toggle={toggle} />;
+  }
+
+  if (screen === "app") {
+    return (
+      <ThemeContext.Provider value={{ theme, toggle }}>
+        <GlobalStyles theme={theme} />
+        <div className="app">
+          <Sidebar view={view} setView={setView} profile={profile} onLogout={handleLogout} user={user} />
+          <main className="main">{views[view] || views.dashboard}</main>
+        </div>
+        {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
+      </ThemeContext.Provider>
+    );
+  }
+
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
       <GlobalStyles theme={theme} />
-      <div className="app">
-        <Sidebar view={view} setView={setView} profile={profile} />
-        <main className="main">{views[view] || views.dashboard}</main>
-      </div>
-      {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
+      <Landing onAuth={handleAuth} theme={theme} toggle={toggle} />
+      {auth && <AuthModal mode={auth.mode} role={auth.role} onClose={() => setAuth(null)} onSuccess={handleSuccess} theme={theme} />}
     </ThemeContext.Provider>
   );
 }
