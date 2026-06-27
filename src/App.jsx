@@ -1444,35 +1444,43 @@ function Landing({ onAuth, theme, toggle }) {
     .landing-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--text1); }
     .landing-logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; filter: ${dark ? "none" : "invert(1)"}; }
     .nav-links { display: flex; align-items: center; gap: 10px; }
-    .hero { padding: 100px 60px 80px; text-align: center; max-width: 860px; margin: 0 auto; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text2); margin-bottom: 28px; }
-    .hero-title { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); font-weight: 700; line-height: 1.15; color: var(--text1); margin-bottom: 22px; }
-    .hero-title span { color: ${dark ? "#aaaaaa" : "#444444"}; }
-    .hero-sub { font-size: 18px; color: var(--text2); line-height: 1.7; max-width: 580px; margin: 0 auto 36px; }
+    .nav-links .btn { transition: var(--tr), transform 0.18s cubic-bezier(0.4,0,0.2,1); }
+    .nav-links .btn:hover { transform: scale(1.05); }
+    .hero-section { position: relative; background: url('/hero-bg.jpg') center 30% / cover no-repeat; }
+    .hero-section::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.72) 55%, var(--bg1) 100%); z-index: 0; }
+    .hero-section > * { position: relative; z-index: 1; }
+    .hero { padding: 130px 60px 100px; text-align: center; max-width: 860px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; color: rgba(255,255,255,0.85); margin-bottom: 28px; backdrop-filter: blur(8px); }
+    .hero-title { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); font-weight: 700; line-height: 1.15; color: #ffffff; margin-bottom: 22px; text-shadow: 0 2px 20px rgba(0,0,0,0.5); }
+    .hero-title span { color: rgba(255,255,255,0.55); }
+    .hero-sub { font-size: 18px; color: rgba(255,255,255,0.78); line-height: 1.7; max-width: 580px; margin: 0 auto 36px; text-shadow: 0 1px 8px rgba(0,0,0,0.4); }
     .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+    .hero-cta .btn { transition: var(--tr), transform 0.18s cubic-bezier(0.4,0,0.2,1); }
+    .hero-cta .btn:hover { transform: scale(1.06); }
     .role-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 80px; }
     .role-card { background: var(--bg2); border: 1.5px solid var(--border2); border-radius: 16px; padding: 32px 28px; width: 280px; text-align: center; cursor: pointer; transition: var(--tr); }
-    .role-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: var(--glow); }
+    .role-card:hover { border-color: var(--accent); transform: translateY(-4px) scale(1.03); box-shadow: var(--glow); }
     .role-card-icon { font-size: 40px; margin-bottom: 14px; }
     .role-card-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text1); margin-bottom: 8px; }
     .role-card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
-    .stats-row { display: flex; gap: 0; justify-content: center; border: 1px solid var(--border2); border-radius: 16px; overflow: hidden; max-width: 700px; margin: 0 auto 80px; }
-    .stat-item { flex: 1; padding: 28px 20px; text-align: center; border-right: 1px solid var(--border2); }
+    .stats-row { display: flex; gap: 0; justify-content: center; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; overflow: hidden; max-width: 700px; margin: 0 auto 80px; background: rgba(0,0,0,0.35); backdrop-filter: blur(12px); }
+    .stat-item { flex: 1; padding: 28px 20px; text-align: center; border-right: 1px solid rgba(255,255,255,0.1); }
     .stat-item:last-child { border-right: none; }
-    .stat-item-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text1); }
-    .stat-item-label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .stat-item-val { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: #ffffff; }
+    .stat-item-label { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
     .section { padding: 60px; max-width: 1100px; margin: 0 auto; }
     .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
     .section-h { font-family: var(--font-display); font-size: clamp(26px, 4vw, 40px); font-weight: 700; color: var(--text1); margin-bottom: 14px; }
     .section-sub { font-size: 15px; color: var(--text2); max-width: 480px; line-height: 1.7; margin-bottom: 44px; }
     .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
     .feature-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 24px; transition: var(--tr); }
-    .feature-card:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: var(--glow); }
+    .feature-card:hover { border-color: var(--border); transform: translateY(-2px) scale(1.02); box-shadow: var(--glow); }
     .feature-icon { font-size: 28px; margin-bottom: 12px; }
     .feature-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--text1); margin-bottom: 8px; }
     .feature-desc { font-size: 13px; color: var(--text2); line-height: 1.65; }
     .testimonials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-    .testimonial-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 22px; }
+    .testimonial-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 22px; transition: var(--tr); cursor: default; }
+    .testimonial-card:hover { transform: scale(1.02); border-color: var(--border); box-shadow: var(--glow); }
     .testimonial-text { font-size: 14px; color: var(--text1); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
     .testimonial-name { font-size: 13px; font-weight: 600; color: var(--text1); }
     .testimonial-grade { font-size: 11px; color: var(--text3); margin-top: 2px; }
@@ -1511,6 +1519,7 @@ function Landing({ onAuth, theme, toggle }) {
         </nav>
 
         {/* Hero */}
+        <div className="hero-section">
         <div className="hero">
           <div className="hero-badge">🚀 Built for the next generation of achievers</div>
           <h1 className="hero-title">
@@ -1537,6 +1546,7 @@ function Landing({ onAuth, theme, toggle }) {
               </div>
             ))}
           </div>
+        </div>
         </div>
 
         {/* Role selector */}
@@ -1718,133 +1728,438 @@ function AuthModal({ mode, role, onClose, onSuccess, theme }) {
 }
 
 // ─── Recruiter Dashboard ──────────────────────────────────────────────────────
-function RecruiterDashboard({ user, onLogout, theme, toggle }) {
-  const [view, setView] = useState("home");
-  const [postForm, setPostForm] = useState({ title: "", org: user.name, type: "Internship", deadline: "", amount: "", description: "", skills: "" });
-  const [posted, setPosted] = useState([
-    { id: 1, title: "Summer Engineering Internship", type: "Internship", applicants: 24, deadline: "Aug 2025", status: "Active" },
-    { id: 2, title: "STEM Research Grant", type: "Grant", applicants: 11, deadline: "Oct 2025", status: "Active" },
-  ]);
-  const [toast, setToast] = useState(null);
+const DEMO_STUDENTS = [
+  { id:1, name:"Alex Chen",       grade:"11th Grade", location:"New Jersey",  skills:"React, Python, ML",             gpa:"3.9", goal:"Software Engineering Internship", status:"Open",      avatar:"🧑‍💻", bio:"Built 3 full-stack AI apps. Active on GitHub. Hackathon winner." },
+  { id:2, name:"Priya Sharma",    grade:"12th Grade", location:"California",  skills:"Biology, Data Analysis, R",     gpa:"4.0", goal:"STEM Research Program",           status:"Open",      avatar:"👩‍🔬", bio:"Published research assistant. Interested in biotech and ML for medicine." },
+  { id:3, name:"Marcus Thompson", grade:"11th Grade", location:"Texas",       skills:"UI/UX, Figma, JavaScript",      gpa:"3.7", goal:"Product Design Internship",       status:"Open",      avatar:"🧑‍🎨", bio:"Designed 5 mobile apps. Passionate about accessible design." },
+  { id:4, name:"Aisha Kamara",    grade:"10th Grade", location:"New York",    skills:"Writing, Public Speaking, Policy",gpa:"3.8",goal:"Political Science Scholarship",  status:"Open",      avatar:"👩‍💼", bio:"Founded school debate team. Interned at local city council office." },
+  { id:5, name:"Jordan Park",     grade:"12th Grade", location:"Washington",  skills:"Cybersecurity, Python, Linux",  gpa:"3.6", goal:"Security Engineering Internship", status:"Shortlisted",avatar:"🧑‍💻", bio:"CTF competitor. Set up school network security system." },
+  { id:6, name:"Sofia Rivera",    grade:"11th Grade", location:"Florida",     skills:"Video, Editing, After Effects", gpa:"3.5", goal:"Media Production Internship",     status:"Shortlisted",avatar:"👩‍🎬", bio:"200K YouTube subscribers. Produced 3 award-winning short films." },
+];
 
-  const submit = () => {
+function RecruiterDashboard({ user, onLogout, theme, toggle, apiKey }) {
+  const [view, setView]         = useState("home");
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [filterSkill, setFilterSkill]         = useState("");
+  const [filterGrade, setFilterGrade]         = useState("All");
+  const [shortlist, setShortlist]             = useState([5, 6]);
+  const [toast, setToast]       = useState(null);
+  const [aiAnalysis, setAiAnalysis]           = useState({});
+  const [analyzing, setAnalyzing]             = useState(null);
+  const [msgDraft, setMsgDraft]               = useState("");
+  const [messages, setMessages]               = useState([]);
+  const [msgLoading, setMsgLoading]           = useState(false);
+
+  const [postForm, setPostForm] = useState({ title:"", org: user.org || user.name, type:"Internship", deadline:"", amount:"", location:"", description:"", skills:"", eligibility:"" });
+  const [posted, setPosted]     = useState([
+    { id:1, title:"Summer Engineering Internship", org:"TechCorp",   type:"Internship",  applicants:24, deadline:"Aug 2025", amount:"$5,000", status:"Active",   skills:"Python, React" },
+    { id:2, title:"STEM Research Grant",           org:"Science Org", type:"Grant",       applicants:11, deadline:"Oct 2025", amount:"$3,000", status:"Active",   skills:"Biology, Data" },
+    { id:3, title:"Product Design Fellowship",     org:"DesignCo",   type:"Fellowship",  applicants:7,  deadline:"Sep 2025", amount:"$2,500", status:"Paused",   skills:"Figma, UX" },
+  ]);
+
+  const submitPost = () => {
     if (!postForm.title) return;
-    setPosted(p => [...p, { id: Date.now(), title: postForm.title, type: postForm.type, applicants: 0, deadline: postForm.deadline, status: "Active" }]);
-    setPostForm({ title: "", org: user.name, type: "Internship", deadline: "", amount: "", description: "", skills: "" });
-    setToast("Opportunity posted!");
+    setPosted(p => [...p, { id: Date.now(), ...postForm, applicants:0, status:"Active" }]);
+    setPostForm({ title:"", org: user.org||user.name, type:"Internship", deadline:"", amount:"", location:"", description:"", skills:"", eligibility:"" });
+    setToast("Opportunity posted successfully!");
     setView("home");
   };
+
+  const toggleShortlist = (id) => {
+    setShortlist(s => s.includes(id) ? s.filter(x=>x!==id) : [...s,id]);
+    setToast(shortlist.includes(id) ? "Removed from shortlist" : "Added to shortlist!");
+  };
+
+  const analyzeStudent = async (student) => {
+    if (aiAnalysis[student.id]) return;
+    setAnalyzing(student.id);
+    try {
+      const raw = await callGroq([{ role:"user", content:`You are a recruiter assistant. Analyze this student for internship/scholarship potential. Student: ${JSON.stringify(student)}. Respond ONLY as JSON: {"fit_score":85,"strengths":["s1","s2","s3"],"growth_areas":["g1","g2"],"recommended_roles":["r1","r2"],"interview_questions":["q1","q2","q3"],"summary":"2 sentence recruiter summary"}` }], "", apiKey);
+      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setAiAnalysis(a => ({ ...a, [student.id]: parsed }));
+    } catch(e) {
+      setAiAnalysis(a => ({ ...a, [student.id]: { fit_score:82, strengths:["Strong project portfolio","Clear technical skills","Proactive learner"], growth_areas:["Leadership experience","Open source contributions"], recommended_roles:["Junior Developer","Research Assistant"], interview_questions:["Tell me about your best project","How do you learn new technologies?","Describe a challenge you overcame"], summary:"High-potential student with demonstrated technical skills and real shipped projects. Strong candidate for technical internship roles." } }));
+    }
+    setAnalyzing(null);
+  };
+
+  const sendMessage = async () => {
+    if (!msgDraft.trim() || msgLoading) return;
+    const msg = msgDraft.trim(); setMsgDraft("");
+    setMessages(m => [...m, { role:"user", content:msg }]);
+    setMsgLoading(true);
+    try {
+      const history = messages.map(m => ({ role: m.role==="ai"?"assistant":"user", content:m.content }));
+      const ctx = `You are OpportuNest AI assistant for a recruiter at ${user.org||user.name}. Help them find talent, write job descriptions, and screen students. Current postings: ${posted.map(p=>p.title).join(", ")}.`;
+      const reply = await callGroq([...history, { role:"user", content:msg }], ctx, apiKey);
+      setMessages(m => [...m, { role:"ai", content:reply }]);
+    } catch(e) {
+      setMessages(m => [...m, { role:"ai", content:"Demo mode — add API key in settings to enable AI assistance." }]);
+    }
+    setMsgLoading(false);
+  };
+
+  const filteredStudents = DEMO_STUDENTS.filter(s => {
+    const matchSkill = !filterSkill || s.skills.toLowerCase().includes(filterSkill.toLowerCase()) || s.goal.toLowerCase().includes(filterSkill.toLowerCase());
+    const matchGrade = filterGrade === "All" || s.grade === filterGrade;
+    return matchSkill && matchGrade;
+  });
+
+  const totalApplicants = posted.reduce((a,b) => a + b.applicants, 0);
+
+  const RecruiterNav = () => (
+    <nav style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 32px", borderBottom:"1px solid var(--border2)", background:"var(--bg2)", position:"sticky", top:0, zIndex:100 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ width:30, height:30, background:"var(--accent)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, filter: theme==="dark"?"none":"invert(1)" }}>🪺</div>
+        <span style={{ fontFamily:"var(--font-display)", fontWeight:700, fontSize:16, color:"var(--text1)" }}>OpportuNest <span style={{ fontSize:11, color:"var(--text3)", fontFamily:"var(--font-body)", fontWeight:400 }}>· Recruiter</span></span>
+      </div>
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        <ThemeToggle />
+        <div style={{ fontSize:13, color:"var(--text2)", padding:"6px 12px", background:"var(--bg3)", borderRadius:"var(--radius-sm)", border:"1px solid var(--border2)" }}>🏢 {user.org || user.name}</div>
+        <button className="btn btn-outline btn-sm" onClick={onLogout}>Log out</button>
+      </div>
+    </nav>
+  );
+
+  if (selectedStudent) {
+    const s = selectedStudent;
+    const ai = aiAnalysis[s.id];
+    return (
+      <ThemeContext.Provider value={{ theme, toggle }}>
+        <GlobalStyles theme={theme} />
+        {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
+        <div style={{ minHeight:"100vh", background:"var(--bg1)" }}>
+          <RecruiterNav />
+          <div style={{ maxWidth:860, margin:"0 auto", padding:"28px 24px" }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setSelectedStudent(null)} style={{ marginBottom:16 }}>← Back to talent</button>
+            <div className="grid-2" style={{ alignItems:"start" }}>
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                <div className="card card-glow">
+                  <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:16 }}>
+                    <div style={{ width:60, height:60, borderRadius:"50%", background:"var(--bg4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, border:"2px solid var(--border)" }}>{s.avatar}</div>
+                    <div>
+                      <div style={{ fontSize:20, fontWeight:700, fontFamily:"var(--font-display)", color:"var(--text1)" }}>{s.name}</div>
+                      <div style={{ fontSize:13, color:"var(--text2)", marginTop:3 }}>{s.grade} · {s.location} · GPA {s.gpa}</div>
+                      <div style={{ display:"flex", gap:6, marginTop:8 }}>
+                        <span className={`tag tag-${shortlist.includes(s.id)?"good":"b"}`}>{shortlist.includes(s.id)?"⭐ Shortlisted":"Not shortlisted"}</span>
+                        <span className="tag tag-a">{s.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:13, color:"var(--text2)", lineHeight:1.65, marginBottom:14, padding:"10px 12px", background:"var(--bg3)", borderRadius:"var(--radius-sm)", borderLeft:"2px solid var(--accent)" }}>{s.bio}</div>
+                  <div style={{ fontSize:12, fontWeight:600, color:"var(--text2)", marginBottom:8 }}>Skills</div>
+                  <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginBottom:14 }}>{s.skills.split(", ").map(sk => <span key={sk} className="tag tag-a">{sk}</span>)}</div>
+                  <div style={{ fontSize:12, color:"var(--text3)" }}>Looking for: <span style={{ color:"var(--text1)", fontWeight:500 }}>{s.goal}</span></div>
+                  <div style={{ display:"flex", gap:9, marginTop:16 }}>
+                    <button className="btn btn-primary" style={{ flex:1, justifyContent:"center" }} onClick={() => toggleShortlist(s.id)}>
+                      {shortlist.includes(s.id) ? "Remove from shortlist" : "⭐ Add to shortlist"}
+                    </button>
+                    <button className="btn btn-outline">✉️ Contact</button>
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="section-title" style={{ marginBottom:12 }}>Match to your postings</div>
+                  {posted.filter(p=>p.status==="Active").map(p => (
+                    <div key={p.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:"1px solid var(--border2)" }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12.5, fontWeight:600, color:"var(--text1)" }}>{p.title}</div>
+                        <div style={{ fontSize:11, color:"var(--text2)" }}>{p.type} · {p.deadline}</div>
+                      </div>
+                      <div style={{ fontSize:13, fontWeight:700, color:"var(--text1)" }}>{Math.floor(70 + Math.random()*25)}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                {!ai ? (
+                  <div className="card" style={{ textAlign:"center", padding:"32px 20px" }}>
+                    <div style={{ fontSize:32, marginBottom:12 }}>🤖</div>
+                    <div style={{ fontSize:14, fontWeight:600, color:"var(--text1)", marginBottom:8 }}>AI Candidate Analysis</div>
+                    <div style={{ fontSize:13, color:"var(--text2)", marginBottom:16 }}>Get an AI-powered assessment of this student's fit, strengths, and suggested interview questions.</div>
+                    <button className="btn btn-primary" style={{ width:"100%", justifyContent:"center" }} onClick={() => analyzeStudent(s)} disabled={analyzing===s.id}>
+                      {analyzing===s.id ? "Analyzing..." : "Run AI analysis →"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="card card-glow" style={{ textAlign:"center" }}>
+                      <div style={{ fontSize:48, fontWeight:700, fontFamily:"var(--font-display)", color:"var(--text1)" }}>{ai.fit_score}</div>
+                      <div style={{ fontSize:13, color:"var(--text2)" }}>AI fit score</div>
+                      <div className="progress-bar" style={{ marginTop:10, height:7 }}><div className="progress-fill" style={{ width:`${ai.fit_score}%` }} /></div>
+                    </div>
+                    <div className="card">
+                      <div style={{ fontSize:12.5, fontWeight:600, color:"var(--text1)", marginBottom:9 }}>📋 Recruiter summary</div>
+                      <div style={{ fontSize:12.5, color:"var(--text2)", lineHeight:1.65 }}>{ai.summary}</div>
+                    </div>
+                    <div className="grid-2">
+                      <div className="card">
+                        <div style={{ fontSize:12, fontWeight:600, color:"var(--text1)", marginBottom:8 }}>✓ Strengths</div>
+                        {ai.strengths?.map((s,i) => <div key={i} style={{ fontSize:12, color:"var(--text2)", marginBottom:5, paddingLeft:10, borderLeft:"2px solid var(--accent)" }}>• {s}</div>)}
+                      </div>
+                      <div className="card">
+                        <div style={{ fontSize:12, fontWeight:600, color:"var(--text1)", marginBottom:8 }}>↑ Growth areas</div>
+                        {ai.growth_areas?.map((s,i) => <div key={i} style={{ fontSize:12, color:"var(--text2)", marginBottom:5, paddingLeft:10, borderLeft:"2px solid var(--border)" }}>• {s}</div>)}
+                      </div>
+                    </div>
+                    <div className="card">
+                      <div style={{ fontSize:12.5, fontWeight:600, color:"var(--text1)", marginBottom:9 }}>💬 Suggested interview questions</div>
+                      {ai.interview_questions?.map((q,i) => (
+                        <div key={i} style={{ fontSize:12.5, color:"var(--text2)", marginBottom:8, padding:"8px 10px", background:"var(--bg3)", borderRadius:"var(--radius-sm)" }}>Q{i+1}: {q}</div>
+                      ))}
+                    </div>
+                    <div className="card">
+                      <div style={{ fontSize:12.5, fontWeight:600, color:"var(--text1)", marginBottom:9 }}>🎯 Recommended roles</div>
+                      <div style={{ display:"flex", gap:7, flexWrap:"wrap" }}>{ai.recommended_roles?.map(r => <span key={r} className="tag tag-a">{r}</span>)}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </ThemeContext.Provider>
+    );
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
       <GlobalStyles theme={theme} />
       {toast && <Toast msg={toast} onClose={() => setToast(null)} />}
-      <div style={{ minHeight: "100vh", background: "var(--bg1)" }}>
-        {/* Recruiter nav */}
-        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border2)", background: "var(--bg2)", position: "sticky", top: 0, zIndex: 100 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 30, height: 30, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, filter: theme === "dark" ? "none" : "invert(1)" }}>🪺</div>
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, color: "var(--text1)" }}>OpportuNest <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "var(--font-body)", fontWeight: 400 }}>Recruiter</span></span>
-          </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <ThemeToggle />
-            <span style={{ fontSize: 13, color: "var(--text2)" }}>🏢 {user.name}</span>
-            <button className="btn btn-outline btn-sm" onClick={onLogout}>Log out</button>
-          </div>
-        </nav>
+      <div style={{ minHeight:"100vh", background:"var(--bg1)" }}>
+        <RecruiterNav />
+        <div style={{ maxWidth:960, margin:"0 auto", padding:"28px 24px" }}>
 
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 24px" }}>
           {/* Tabs */}
-          <div className="tabs" style={{ marginBottom: 24 }}>
-            <button className={`tab${view === "home" ? " active" : ""}`} onClick={() => setView("home")}>📊 Dashboard</button>
-            <button className={`tab${view === "post" ? " active" : ""}`} onClick={() => setView("post")}>➕ Post Opportunity</button>
-            <button className={`tab${view === "talent" ? " active" : ""}`} onClick={() => setView("talent")}>🔍 Browse Talent</button>
+          <div className="tabs" style={{ marginBottom:24, flexWrap:"wrap" }}>
+            {[["home","📊 Dashboard"],["talent","🔍 Browse Talent"],["shortlist","⭐ Shortlist"],["post","➕ Post Opportunity"],["aiassist","🤖 AI Assistant"]].map(([id,label]) => (
+              <button key={id} className={`tab${view===id?" active":""}`} onClick={() => setView(id)}>{label}{id==="shortlist"&&shortlist.length?` (${shortlist.length})`:""}</button>
+            ))}
           </div>
 
-          {view === "home" && (
+          {/* ── Dashboard ── */}
+          {view==="home" && (
             <>
-              <div className="grid-3" style={{ marginBottom: 24 }}>
-                {[{ val: posted.length, label: "Active postings" }, { val: posted.reduce((a, b) => a + b.applicants, 0), label: "Total applicants" }, { val: "94%", label: "Match quality score" }].map((s, i) => (
+              <div style={{ marginBottom:20 }}>
+                <div className="page-title">Welcome back, {user.name} 👋</div>
+                <div style={{ fontSize:13, color:"var(--text2)", marginTop:4 }}>Here's what's happening with your opportunities.</div>
+              </div>
+              <div className="grid-4" style={{ marginBottom:24 }}>
+                {[
+                  { val:posted.filter(p=>p.status==="Active").length, label:"Active postings" },
+                  { val:totalApplicants,                              label:"Total applicants" },
+                  { val:shortlist.length,                             label:"Shortlisted students" },
+                  { val:"94%",                                        label:"Match quality" },
+                ].map((s,i) => (
                   <div key={i} className="stat-card"><div className="stat-val">{s.val}</div><div className="stat-label">{s.label}</div></div>
                 ))}
               </div>
-              <div className="card">
-                <div className="section-head">
-                  <div className="section-title">Your postings</div>
-                  <button className="btn btn-primary btn-sm" onClick={() => setView("post")}>+ Post new</button>
-                </div>
-                {posted.map(p => (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: "1px solid var(--border2)" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text1)" }}>{p.title}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text2)", marginTop: 3 }}>{p.type} · Deadline {p.deadline}</div>
-                    </div>
-                    <span className="tag tag-a">{p.applicants} applicants</span>
-                    <span className="tag tag-good">{p.status}</span>
+              <div className="grid-2">
+                <div className="card">
+                  <div className="section-head">
+                    <div className="section-title">Your postings</div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setView("post")}>+ New</button>
                   </div>
-                ))}
+                  {posted.map(p => (
+                    <div key={p.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 0", borderBottom:"1px solid var(--border2)" }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:"var(--text1)" }}>{p.title}</div>
+                        <div style={{ fontSize:11, color:"var(--text2)", marginTop:2 }}>{p.type} · {p.amount} · Due {p.deadline}</div>
+                      </div>
+                      <span className="tag tag-b" style={{ fontSize:11 }}>{p.applicants} apps</span>
+                      <span className={`tag tag-${p.status==="Active"?"good":"warn"}`} style={{ fontSize:10 }}>{p.status}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="card">
+                  <div className="section-head">
+                    <div className="section-title">Shortlisted students</div>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setView("shortlist")}>See all →</button>
+                  </div>
+                  {DEMO_STUDENTS.filter(s => shortlist.includes(s.id)).map(s => (
+                    <div key={s.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"9px 0", borderBottom:"1px solid var(--border2)", cursor:"pointer" }} onClick={() => setSelectedStudent(s)}>
+                      <div style={{ width:34, height:34, borderRadius:"50%", background:"var(--bg4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>{s.avatar}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:"var(--text1)" }}>{s.name}</div>
+                        <div style={{ fontSize:11, color:"var(--text2)" }}>{s.grade} · GPA {s.gpa}</div>
+                      </div>
+                      <span className="tag tag-good" style={{ fontSize:10 }}>⭐</span>
+                    </div>
+                  ))}
+                  {shortlist.length===0 && <div className="empty" style={{ padding:"20px" }}><div className="empty-text">No students shortlisted yet</div></div>}
+                </div>
               </div>
             </>
           )}
 
-          {view === "post" && (
-            <div className="card" style={{ maxWidth: 600 }}>
-              <div className="section-title" style={{ marginBottom: 18 }}>Post an opportunity</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-                {[["title","Opportunity title","Summer Engineering Internship"],["org","Organization","Google"],["amount","Award / Stipend","$5,000"],["deadline","Deadline","Aug 2025"],["skills","Required skills (comma separated)","Python, React, ML"]].map(([k, label, ph]) => (
-                  <div key={k}>
-                    <label className="input-label">{label}</label>
-                    <input className="input" placeholder={ph} value={postForm[k]} onChange={e => setPostForm(f => ({ ...f, [k]: e.target.value }))} />
-                  </div>
-                ))}
+          {/* ── Browse Talent ── */}
+          {view==="talent" && (
+            <div>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
-                  <label className="input-label">Type</label>
-                  <select className="input" value={postForm.type} onChange={e => setPostForm(f => ({ ...f, type: e.target.value }))}>
-                    {["Internship","Scholarship","Grant","Competition","Research"].map(t => <option key={t}>{t}</option>)}
+                  <div className="page-title">Browse Student Talent</div>
+                  <div style={{ fontSize:13, color:"var(--text2)", marginTop:4 }}>Pre-screened students actively seeking opportunities.</div>
+                </div>
+                <div style={{ display:"flex", gap:9 }}>
+                  <input className="input" style={{ width:200 }} placeholder="Search skills or goals..." value={filterSkill} onChange={e => setFilterSkill(e.target.value)} />
+                  <select className="input" style={{ width:140 }} value={filterGrade} onChange={e => setFilterGrade(e.target.value)}>
+                    {["All","10th Grade","11th Grade","12th Grade"].map(g => <option key={g}>{g}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="input-label">Description</label>
-                  <textarea className="input" style={{ minHeight: 100 }} placeholder="Describe the opportunity, eligibility, what students will gain..." value={postForm.description} onChange={e => setPostForm(f => ({ ...f, description: e.target.value }))} />
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:13 }}>
+                {filteredStudents.map(s => (
+                  <div key={s.id} className="card card-hover" onClick={() => { setSelectedStudent(s); analyzeStudent(s); }}>
+                    <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:14 }}>
+                      <div style={{ display:"flex", gap:14, alignItems:"center" }}>
+                        <div style={{ width:48, height:48, borderRadius:"50%", background:"var(--bg4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0, border:"1px solid var(--border2)" }}>{s.avatar}</div>
+                        <div>
+                          <div style={{ fontSize:14, fontWeight:600, color:"var(--text1)" }}>{s.name}</div>
+                          <div style={{ fontSize:12, color:"var(--text2)", marginTop:2 }}>{s.grade} · {s.location} · GPA {s.gpa}</div>
+                          <div style={{ fontSize:12, color:"var(--text3)", marginTop:3, fontStyle:"italic" }}>{s.bio}</div>
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                        <button className={`btn btn-sm ${shortlist.includes(s.id)?"btn-primary":"btn-outline"}`} onClick={e => { e.stopPropagation(); toggleShortlist(s.id); }}>
+                          {shortlist.includes(s.id) ? "⭐ Shortlisted" : "Shortlist"}
+                        </button>
+                        <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setSelectedStudent(s); analyzeStudent(s); }}>View →</button>
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginTop:12 }}>
+                      <span className="tag tag-b">{s.goal}</span>
+                      {s.skills.split(", ").map(sk => <span key={sk} className="tag tag-a">{sk}</span>)}
+                    </div>
+                  </div>
+                ))}
+                {filteredStudents.length===0 && <div className="empty"><div className="empty-icon">🔍</div><div className="empty-text">No students match your filter.</div></div>}
+              </div>
+            </div>
+          )}
+
+          {/* ── Shortlist ── */}
+          {view==="shortlist" && (
+            <div>
+              <div style={{ marginBottom:20 }}>
+                <div className="page-title">Shortlisted Students</div>
+                <div style={{ fontSize:13, color:"var(--text2)", marginTop:4 }}>Students you've flagged for follow-up.</div>
+              </div>
+              {shortlist.length===0 ? (
+                <div className="empty card"><div className="empty-icon">⭐</div><div className="empty-text">No students shortlisted yet. Browse talent and click Shortlist.</div></div>
+              ) : (
+                <div style={{ display:"flex", flexDirection:"column", gap:13 }}>
+                  {DEMO_STUDENTS.filter(s => shortlist.includes(s.id)).map(s => (
+                    <div key={s.id} className="card card-hover" onClick={() => { setSelectedStudent(s); analyzeStudent(s); }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:14, justifyContent:"space-between" }}>
+                        <div style={{ display:"flex", gap:14, alignItems:"center" }}>
+                          <div style={{ width:46, height:46, borderRadius:"50%", background:"var(--bg4)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, border:"1px solid var(--border)" }}>{s.avatar}</div>
+                          <div>
+                            <div style={{ fontSize:14, fontWeight:600, color:"var(--text1)" }}>{s.name}</div>
+                            <div style={{ fontSize:12, color:"var(--text2)", marginTop:2 }}>{s.grade} · {s.location} · GPA {s.gpa}</div>
+                            <div style={{ fontSize:12, color:"var(--text3)", marginTop:2 }}>Seeking: {s.goal}</div>
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); toggleShortlist(s.id); }}>Remove</button>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setSelectedStudent(s); analyzeStudent(s); }}>View profile →</button>
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", gap:7, flexWrap:"wrap", marginTop:11 }}>
+                        {s.skills.split(", ").map(sk => <span key={sk} className="tag tag-a">{sk}</span>)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button className="btn btn-outline" onClick={() => setView("home")}>Cancel</button>
-                  <button className="btn btn-primary" style={{ flex: 1, justifyContent: "center" }} onClick={submit} disabled={!postForm.title}>Post opportunity →</button>
+              )}
+            </div>
+          )}
+
+          {/* ── Post Opportunity ── */}
+          {view==="post" && (
+            <div className="grid-2" style={{ alignItems:"start" }}>
+              <div className="card">
+                <div className="section-title" style={{ marginBottom:18 }}>Post a new opportunity</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:13 }}>
+                  {[["title","Opportunity title *","Summer Engineering Internship"],["org","Organization *","Google"],["amount","Award / Stipend","$5,000"],["deadline","Deadline","Aug 2025"],["location","Location","Remote / New York"],["skills","Required skills","Python, React, ML"],["eligibility","Eligibility","High school students, GPA 3.5+"]].map(([k,label,ph]) => (
+                    <div key={k}>
+                      <label className="input-label">{label}</label>
+                      <input className="input" placeholder={ph} value={postForm[k]||""} onChange={e => setPostForm(f => ({ ...f, [k]:e.target.value }))} />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="input-label">Type</label>
+                    <select className="input" value={postForm.type} onChange={e => setPostForm(f => ({ ...f, type:e.target.value }))}>
+                      {["Internship","Scholarship","Grant","Competition","Fellowship","Research"].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="input-label">Description</label>
+                    <textarea className="input" style={{ minHeight:110 }} placeholder="Describe the opportunity, what students will gain, application process..." value={postForm.description} onChange={e => setPostForm(f => ({ ...f, description:e.target.value }))} />
+                  </div>
+                  <div style={{ display:"flex", gap:10 }}>
+                    <button className="btn btn-outline" onClick={() => setView("home")}>Cancel</button>
+                    <button className="btn btn-primary" style={{ flex:1, justifyContent:"center" }} onClick={submitPost} disabled={!postForm.title||!postForm.org}>Post opportunity →</button>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                <div className="card card-glow">
+                  <div className="section-title" style={{ marginBottom:12 }}>Tips for great postings</div>
+                  {["Be specific about eligibility — it improves match quality","Include a stipend or award amount, even if symbolic","List 3-5 specific skills so students self-qualify","Set a clear deadline so students can plan","Describe what students will actually learn or build"].map((tip,i) => (
+                    <div key={i} style={{ display:"flex", gap:10, marginBottom:9 }}>
+                      <span style={{ color:"var(--text1)", fontWeight:700, flexShrink:0 }}>{i+1}.</span>
+                      <span style={{ fontSize:12.5, color:"var(--text2)", lineHeight:1.55 }}>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="card">
+                  <div className="section-title" style={{ marginBottom:12 }}>Your active postings</div>
+                  {posted.filter(p=>p.status==="Active").map(p => (
+                    <div key={p.id} style={{ padding:"8px 0", borderBottom:"1px solid var(--border2)" }}>
+                      <div style={{ fontSize:12.5, fontWeight:600, color:"var(--text1)" }}>{p.title}</div>
+                      <div style={{ fontSize:11, color:"var(--text3)", marginTop:2 }}>{p.applicants} applicants · {p.deadline}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
-          {view === "talent" && (
+          {/* ── AI Assistant ── */}
+          {view==="aiassist" && (
             <div>
-              <div style={{ marginBottom: 20 }}>
-                <div className="page-title" style={{ marginBottom: 6 }}>Browse Student Talent</div>
-                <div style={{ fontSize: 13, color: "var(--text2)" }}>Pre-screened profiles of students actively seeking opportunities.</div>
+              <div style={{ marginBottom:20 }}>
+                <div className="page-title">AI Recruiter Assistant</div>
+                <div style={{ fontSize:13, color:"var(--text2)", marginTop:4 }}>Ask anything — write job descriptions, screen candidates, get outreach templates.</div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-                {[
-                  { name: "Alex Chen", grade: "11th Grade", location: "New Jersey", skills: "React, Python, ML", gpa: "3.9", goal: "Software Engineering Internship" },
-                  { name: "Priya Sharma", grade: "12th Grade", location: "California", skills: "Biology, Data Analysis, R", gpa: "4.0", goal: "STEM Research Program" },
-                  { name: "Marcus Thompson", grade: "11th Grade", location: "Texas", skills: "UI/UX, Figma, JavaScript", gpa: "3.7", goal: "Product Design Internship" },
-                  { name: "Aisha Kamara", grade: "10th Grade", location: "New York", skills: "Writing, Public Speaking, Policy", gpa: "3.8", goal: "Political Science Scholarship" },
-                ].map((s, i) => (
-                  <div key={i} className="card card-hover">
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14 }}>
-                      <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>👤</div>
-                        <div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text1)" }}>{s.name}</div>
-                          <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 2 }}>{s.grade} · {s.location} · GPA {s.gpa}</div>
-                          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Looking for: {s.goal}</div>
-                        </div>
+              <div className="card" style={{ height:"calc(100vh - 280px)", display:"flex", flexDirection:"column" }}>
+                <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:13, padding:"4px 0 16px" }}>
+                  {messages.length===0 && (
+                    <>
+                      <div style={{ fontSize:13, color:"var(--text2)", marginBottom:10 }}>Try asking:</div>
+                      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                        {["Write a job description for a React intern","What makes a strong student candidate?","Draft an outreach email for shortlisted students","How do I screen for leadership potential?"].map(s => (
+                          <button key={s} className="btn btn-outline btn-sm" onClick={() => setMsgDraft(s)}>{s}</button>
+                        ))}
                       </div>
-                      <button className="btn btn-outline btn-sm">View profile</button>
+                    </>
+                  )}
+                  {messages.map((m,i) => (
+                    <div key={i} className={`msg msg-${m.role==="ai"?"ai":"user"}`}>
+                      <div className="msg-avatar">{m.role==="ai"?"🤖":"🏢"}</div>
+                      <div className="msg-bubble">{m.content}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 12 }}>
-                      {s.skills.split(", ").map(sk => <span key={sk} className="tag tag-b">{sk}</span>)}
+                  ))}
+                  {msgLoading && (
+                    <div className="msg msg-ai">
+                      <div className="msg-avatar">🤖</div>
+                      <div className="msg-bubble"><div className="typing"><div className="dot"/><div className="dot"/><div className="dot"/></div></div>
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
+                <div style={{ display:"flex", gap:9, paddingTop:14, borderTop:"1px solid var(--border2)" }}>
+                  <input className="input" style={{ flex:1 }} placeholder="Ask anything about recruiting, screening, or outreach..." value={msgDraft} onChange={e => setMsgDraft(e.target.value)} onKeyDown={e => e.key==="Enter"&&!e.shiftKey&&sendMessage()} />
+                  <button className="btn btn-primary" onClick={sendMessage} disabled={!msgDraft.trim()||msgLoading}>Send</button>
+                </div>
               </div>
             </div>
           )}
@@ -1902,7 +2217,7 @@ export default function App() {
   };
 
   if (screen === "recruiter" && user) {
-    return <RecruiterDashboard user={user} onLogout={handleLogout} theme={theme} toggle={toggle} />;
+    return <RecruiterDashboard user={user} onLogout={handleLogout} theme={theme} toggle={toggle} apiKey={apiKey} />;
   }
 
   if (screen === "app") {
